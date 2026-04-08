@@ -1,3 +1,4 @@
+use crate::is_extension;
 use std::path::{Component, Path, PathBuf};
 
 /// 对文件名进行安全处理，保留扩展名，截断过长的文件名部分
@@ -11,11 +12,10 @@ pub fn sanitize_filename(filename: impl AsRef<str>, max_units: usize) -> String 
     let cleaned = sanitize_filename::sanitize_with_options(filename, options);
     let (base, ext) = if let Some(pos) = cleaned.rfind('.') {
         let ext_candidate = &cleaned[pos..];
-        // 如果点后面的内容太长（>16字节），视作文件名的一部分而非扩展名
-        if ext_candidate.len() > 16 {
-            (&cleaned[..], "")
-        } else {
+        if is_extension(ext_candidate) {
             (&cleaned[..pos], ext_candidate)
+        } else {
+            (&cleaned[..], "")
         }
     } else {
         (&cleaned[..], "")
