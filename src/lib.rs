@@ -2,13 +2,15 @@
 mod auto_ext;
 #[cfg(feature = "sanitize")]
 mod sanitize;
-mod unique_path;
+mod sync;
+#[cfg(feature = "tokio")]
+pub mod tokio;
 
 #[cfg(feature = "auto_ext")]
 pub use auto_ext::*;
 #[cfg(feature = "sanitize")]
 pub use sanitize::*;
-pub use unique_path::*;
+pub use sync::*;
 
 /// 检查扩展名是否合法
 pub fn is_extension(ext: &str) -> bool {

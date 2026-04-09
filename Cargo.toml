@@ -1,6 +1,6 @@
 [package]
 name = "path_helper"
-version = "0.1.1"
+version = "0.1.2"
 description = "简单易用的路径处理库"
 edition = "2021"
 authors = ["share121 <me@s121.top>"]
@@ -13,7 +13,7 @@ categories = ["filesystem"]
 [dependencies]
 mime_guess = { version = "2.0.5", optional = true }
 sanitize-filename = { version = "0.6.0", optional = true }
-tokio = { version = "1.51.0", features = ["fs"], optional = true }
+tokio = { version = "1.51.0", features = ["fs", "io-util"], optional = true }
 
 [features]
 sanitize = ["dep:sanitize-filename"]
