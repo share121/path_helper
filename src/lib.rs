@@ -13,7 +13,9 @@ pub use sanitize::*;
 pub use sync::*;
 
 /// 检查扩展名是否合法
-pub fn is_extension(ext: &str) -> bool {
+#[must_use]
+pub fn is_extension(mut ext: &str) -> bool {
+    ext = ext.trim_start_matches('.');
     !ext.is_empty() && ext.len() <= 16 && ext.chars().all(|c| c.is_ascii_graphic())
 }
 

@@ -1,4 +1,5 @@
 #[cfg(windows)]
+#[must_use]
 pub fn truncate_filename<'a>(base: &'a str, ext: &str, max_units: usize) -> &'a str {
     let ext_units = ext.encode_utf16().count();
     let max_base_units = max_units.saturating_sub(ext_units);
@@ -16,6 +17,7 @@ pub fn truncate_filename<'a>(base: &'a str, ext: &str, max_units: usize) -> &'a 
 }
 
 #[cfg(unix)]
+#[must_use]
 pub fn truncate_filename<'a>(base: &'a str, ext: &str, max_units: usize) -> &'a str {
     let ext_bytes = ext.len();
     let max_base_bytes = max_units.saturating_sub(ext_bytes);

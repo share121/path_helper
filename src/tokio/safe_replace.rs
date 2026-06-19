@@ -3,6 +3,10 @@ use std::path::Path;
 use tokio::io::AsyncWriteExt;
 
 /// 安全的替换文件内容。会在同目录下创建一个临时文件，落盘完成后再重命名回原文件。
+///
+/// # Errors
+///
+/// IO 操作失败时返回错误
 pub async fn safe_replace(path: &Path, content: &[u8]) -> std::io::Result<()> {
     let tmp_path = gen_unique_path(path.with_extension("tmp")).await?;
     let mut file = tokio::fs::OpenOptions::new()

@@ -2,7 +2,7 @@ use crate::is_extension;
 use std::borrow::Cow;
 
 fn best_ext(content_type: &str) -> Option<&str> {
-    let mime_type = content_type.split(';').next().map(|s| s.trim())?;
+    let mime_type = content_type.split(';').next().map(str::trim)?;
     match mime_type {
         "application/octet-stream" => None,
         _ => mime_guess::get_mime_extensions_str(mime_type).and_then(min_ext),
@@ -17,6 +17,7 @@ fn min_ext<'a>(extensions: &[&'a str]) -> Option<&'a str> {
 }
 
 /// 根据文件名和 Content-Type 自动添加扩展名
+#[must_use]
 pub fn auto_ext<'a>(file_name: &'a str, content_type: Option<&str>) -> Cow<'a, str> {
     let file_name = file_name.trim_end_matches('.');
     let has_valid_ext = file_name
@@ -27,7 +28,7 @@ pub fn auto_ext<'a>(file_name: &'a str, content_type: Option<&str>) -> Cow<'a, s
     }
     if let Some(ct) = content_type {
         if let Some(ext) = best_ext(ct) {
-            return Cow::Owned(format!("{}.{}", file_name, ext));
+            return Cow::Owned(format!("{file_name}.{ext}"));
         }
     }
     Cow::Borrowed(file_name)

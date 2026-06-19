@@ -1,6 +1,6 @@
 [package]
 name = "path_helper"
-version = "0.1.3"
+version = "0.1.4"
 description = "简单易用的路径处理库"
 edition = "2021"
 authors = ["share121 <me@s121.top>"]
@@ -20,7 +20,7 @@ sanitize = ["dep:sanitize-filename"]
 auto_ext = ["dep:mime_guess"]
 tokio = ["dep:tokio"]
 
-[workspace.lints.clippy]
+[lints.clippy]
 all = { level = "deny", priority = -1 }
 cargo = { level = "deny", priority = -1 }
 # restriction = { level = "deny", priority = -1 }
