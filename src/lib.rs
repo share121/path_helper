@@ -1,5 +1,6 @@
 #[cfg(feature = "auto_ext")]
 mod auto_ext;
+mod file_stem;
 #[cfg(feature = "sanitize")]
 mod sanitize;
 mod sync;
@@ -11,6 +12,8 @@ pub use auto_ext::*;
 #[cfg(feature = "sanitize")]
 pub use sanitize::*;
 pub use sync::*;
+
+pub use file_stem::*;
 
 /// 检查扩展名是否合法
 #[must_use]

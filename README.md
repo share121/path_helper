@@ -17,3 +17,5 @@
 5. `is_extension`: 检测扩展名是否合法
 6. `safe_replace`: 安全的替换文件内容。会在同目录下创建一个临时文件，落盘完成后再重命名回原文件。
 7. `truncate_filename`: 把文件名安全地截断到指定长度
+8. `add_file_stem_suffix`: 给文件名的 stem 部分添加后缀
+9. `add_file_stem_prefix`: 给文件名的 stem 部分添加前缀
