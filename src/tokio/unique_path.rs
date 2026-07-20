@@ -12,12 +12,10 @@ use std::path::{Path, PathBuf};
 pub async fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf> {
     let path = path.as_ref();
 
-    match tokio::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(path)
-        .await
-    {
+    let mut open_option = tokio::fs::OpenOptions::new();
+    open_option.create_new(true);
+
+    match open_option.open(path).await {
         Ok(_) => return Ok(path.to_path_buf()),
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(e) => return Err(e),
@@ -36,12 +34,7 @@ pub async fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf>
             new_name.push(")");
         }
         let new_path = path.with_file_name(new_name);
-        match tokio::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&new_path)
-            .await
-        {
+        match open_option.open(&new_path).await {
             Ok(_) => return Ok(new_path),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
             Err(e) => return Err(e),

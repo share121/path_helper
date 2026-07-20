@@ -13,7 +13,10 @@ use std::path::{Path, PathBuf};
 pub fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf> {
     let path = path.as_ref();
 
-    match OpenOptions::new().write(true).create_new(true).open(path) {
+    let mut open_option = OpenOptions::new();
+    open_option.create_new(true);
+
+    match open_option.open(path) {
         Ok(_) => return Ok(path.to_path_buf()),
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(e) => return Err(e),
@@ -32,11 +35,7 @@ pub fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf> {
             new_name.push(")");
         }
         let new_path = path.with_file_name(new_name);
-        match OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&new_path)
-        {
+        match open_option.open(&new_path) {
             Ok(_) => return Ok(new_path),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
             Err(e) => return Err(e),
