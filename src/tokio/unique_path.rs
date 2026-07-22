@@ -13,7 +13,7 @@ pub async fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf>
     let path = path.as_ref();
 
     let mut open_option = tokio::fs::OpenOptions::new();
-    open_option.create_new(true);
+    open_option.create_new(true).write(true);
 
     match open_option.open(path).await {
         Ok(_) => return Ok(path.to_path_buf()),
