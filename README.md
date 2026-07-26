@@ -19,3 +19,4 @@
 7. `truncate_filename`: 把文件名安全地截断到指定长度
 8. `add_file_stem_suffix`: 给文件名的 stem 部分添加后缀
 9. `add_file_stem_prefix`: 给文件名的 stem 部分添加前缀
+10. `iter_stem`: 一个迭代器，自动生成 `xxx.mp4`、`xxx (1).mp4`、`xxx (2).mp4`……的文件名
