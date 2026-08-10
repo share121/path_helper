@@ -10,17 +10,7 @@ pub fn truncate_filename<'a>(base: &'a str, ext: &'a str, max_units: usize) -> C
         return Cow::Borrowed(truncate_units(ext, max_units));
     }
     let max_base_units = max_units - ext_units;
-    let mut current_units = 0;
-    let mut byte_index = 0;
-    for (i, c) in base.char_indices() {
-        let units = c.len_utf16();
-        if current_units + units > max_base_units {
-            break;
-        }
-        current_units += units;
-        byte_index = i + c.len_utf8();
-    }
-    Cow::Owned(format!("{}{ext}", &base[..byte_index]))
+    Cow::Owned(format!("{}{ext}", truncate_units(base, max_base_units)))
 }
 
 #[cfg(unix)]
@@ -33,14 +23,7 @@ pub fn truncate_filename<'a>(base: &'a str, ext: &'a str, max_units: usize) -> C
         return Cow::Borrowed(truncate_units(ext, max_units));
     }
     let max_base_bytes = max_units - ext_bytes;
-    if base.len() <= max_base_bytes {
-        return Cow::Owned(format!("{base}{ext}"));
-    }
-    let mut end = max_base_bytes;
-    while end > 0 && !base.is_char_boundary(end) {
-        end -= 1;
-    }
-    Cow::Owned(format!("{}{ext}", &base[..end]))
+    Cow::Owned(format!("{}{ext}", truncate_units(base, max_base_bytes)))
 }
 
 #[cfg(windows)]
