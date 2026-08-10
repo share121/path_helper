@@ -6,11 +6,12 @@ use std::{io::Write, path::Path};
 /// # Errors
 ///
 /// IO 操作失败时返回错误
-pub fn safe_replace(path: &Path, content: &[u8]) -> std::io::Result<()> {
+pub fn safe_replace(path: impl AsRef<Path>, content: &[u8]) -> std::io::Result<()> {
+    let path = path.as_ref();
     let tmp_path = gen_unique_path(path.with_extension("tmp"))?;
     let mut file = std::fs::OpenOptions::new()
         .truncate(true)
-        .create(true)
+        .create(false)
         .write(true)
         .open(&tmp_path)?;
     file.write_all(content)?;

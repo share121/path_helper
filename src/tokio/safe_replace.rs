@@ -7,11 +7,12 @@ use tokio::io::AsyncWriteExt;
 /// # Errors
 ///
 /// IO 操作失败时返回错误
-pub async fn safe_replace(path: &Path, content: &[u8]) -> std::io::Result<()> {
+pub async fn safe_replace(path: impl AsRef<Path>, content: &[u8]) -> std::io::Result<()> {
+    let path = path.as_ref();
     let tmp_path = gen_unique_path(path.with_extension("tmp")).await?;
     let mut file = tokio::fs::OpenOptions::new()
         .truncate(true)
-        .create(true)
+        .create(false)
         .write(true)
         .open(&tmp_path)
         .await?;

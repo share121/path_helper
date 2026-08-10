@@ -3,8 +3,8 @@ use std::path::{Component, Path, PathBuf};
 
 /// 对文件名进行安全处理，保留扩展名，截断过长的文件名部分。
 /// 结果总长度（含扩展名）不超过 `max_units`；若扩展名本身已超出预算则一并截断。
-pub fn sanitize_filename(filename: impl AsRef<str>, max_units: usize) -> String {
-    let filename = filename.as_ref();
+#[must_use]
+pub fn sanitize_filename(filename: &str, max_units: usize) -> String {
     let options = sanitize_filename::Options {
         windows: cfg!(windows),
         truncate: false,
@@ -27,7 +27,8 @@ pub fn sanitize_filename(filename: impl AsRef<str>, max_units: usize) -> String 
 
 /// 对路径进行安全处理，保留扩展名，截断过长的文件名部分
 #[must_use]
-pub fn sanitize_path(path: &Path) -> PathBuf {
+pub fn sanitize_path(path: impl AsRef<Path>) -> PathBuf {
+    let path = path.as_ref();
     let mut buf = PathBuf::with_capacity(path.as_os_str().len());
     for c in path.components() {
         match c {
