@@ -42,3 +42,46 @@ pub async fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf>
     }
     unreachable!("loop should always find a free filename or return an error")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[must_use]
+    fn tmp_root() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("path_helper_tu_{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[tokio::test]
+    async fn creates_new_file() {
+        let dir = tmp_root();
+        let target = dir.join("new.txt");
+        let got = gen_unique_path(&target).await.unwrap();
+        assert_eq!(got, target);
+        assert!(got.exists());
+        assert_eq!(fs::metadata(&got).unwrap().len(), 0);
+        fs::remove_file(&got).unwrap();
+    }
+
+    #[tokio::test]
+    async fn existing_gets_numbered() {
+        let dir = tmp_root();
+        let target = dir.join("a.zip");
+        fs::write(&target, b"orig").unwrap();
+        let got = gen_unique_path(&target).await.unwrap();
+        assert_eq!(got, dir.join("a (1).zip"));
+        fs::remove_file(&target).unwrap();
+        fs::remove_file(&got).unwrap();
+    }
+
+    #[tokio::test]
+    async fn parent_missing_errors() {
+        let dir = tmp_root().join("nope/sub");
+        let target = dir.join("x.txt");
+        let err = gen_unique_path(&target).await.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+    }
+}

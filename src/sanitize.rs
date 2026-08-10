@@ -1,7 +1,8 @@
 use crate::{is_extension, truncate_filename};
 use std::path::{Component, Path, PathBuf};
 
-/// 对文件名进行安全处理，保留扩展名，截断过长的文件名部分
+/// 对文件名进行安全处理，保留扩展名，截断过长的文件名部分。
+/// 结果总长度（含扩展名）不超过 `max_units`；若扩展名本身已超出预算则一并截断。
 pub fn sanitize_filename(filename: impl AsRef<str>, max_units: usize) -> String {
     let filename = filename.as_ref();
     let options = sanitize_filename::Options {
@@ -21,8 +22,7 @@ pub fn sanitize_filename(filename: impl AsRef<str>, max_units: usize) -> String 
             }
         },
     );
-    let final_base = truncate_filename(base, ext, max_units);
-    format!("{final_base}{ext}")
+    truncate_filename(base, ext, max_units).into_owned()
 }
 
 /// 对路径进行安全处理，保留扩展名，截断过长的文件名部分
@@ -65,10 +65,23 @@ mod tests {
         );
     }
 
+    #[must_use]
+    fn norm(p: &Path) -> String {
+        p.to_string_lossy().replace('\\', "/")
+    }
+
     #[test]
-    fn test_sanitize() {
-        // 文件名：file_stem.ext
-        // 测试长文件名保留后缀（当 ext 较短时优先截断 file_stem）
+    fn sanitize_replaces_illegal_chars() {
+        assert_eq!(
+            sanitize_filename("test/\\:*?\"<>|.png", 255),
+            "test_________.png"
+        );
+        assert_eq!(sanitize_filename("a*b", 255), "a_b");
+        assert_eq!(sanitize_filename("a?b", 255), "a_b");
+    }
+
+    #[test]
+    fn sanitize_keeps_extension_and_truncates_long_stem() {
         let long_stem = "这是一个非常".repeat(50);
         let long_name = format!("{long_stem}.mp4");
         let result = sanitize_filename(&long_name, 255);
@@ -76,22 +89,112 @@ mod tests {
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("mp4")));
         assert_length(&result, 255);
+    }
 
-        // 文件名：file_stem.ext
-        // 测试非常长的后缀名（当 ext 过长时，可能他并没有扩展名，类似“1.这是第一个标题”，显然“这是第一个标题”不是文件后缀名，因此 file_stem.ext 当成整个文件名截断
+    #[test]
+    fn sanitize_long_pseudo_extension_truncates_whole() {
         let long_stem = "这是一个非常".repeat(50);
         let long_name = format!("1.{long_stem}");
         let result = sanitize_filename(&long_name, 255);
         assert_length(&result, 255);
+    }
 
-        // 测试普通后缀
-        let normal_name = "我的文件.test.txt";
-        let result = sanitize_filename(normal_name, 255);
-        assert_eq!(result, "我的文件.test.txt");
+    #[test]
+    fn sanitize_normal_multidot_extension() {
+        assert_eq!(
+            sanitize_filename("我的文件.test.txt", 255),
+            "我的文件.test.txt"
+        );
+        assert_eq!(sanitize_filename("foo.bar.baz", 255), "foo.bar.baz");
+    }
 
-        // 测试包含非法字符
-        let illegal = "test/\\:*?\"<>|.png";
-        let result = sanitize_filename(illegal, 255);
-        assert_eq!(result, "test_________.png");
+    #[test]
+    fn sanitize_no_extension() {
+        assert_eq!(sanitize_filename("我的文件", 255), "我的文件");
+        assert_eq!(sanitize_filename("plain", 255), "plain");
+    }
+
+    #[test]
+    fn sanitize_empty() {
+        let result = sanitize_filename("", 255);
+        assert_length(&result, 255);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn sanitize_hidden_file() {
+        // 单点隐藏文件被整体当扩展名（stem 空），字串恰好不变
+        assert_eq!(sanitize_filename(".gitignore", 255), ".gitignore");
+        assert_eq!(sanitize_filename(".myhidden", 255), ".myhidden");
+    }
+
+    #[test]
+    fn sanitize_respects_small_max_units() {
+        let result = sanitize_filename("abcdefghij.txt", 12);
+        assert!(Path::new(&result)
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("txt")));
+        assert_length(&result, 12);
+    }
+
+    #[test]
+    fn sanitize_path_basic() {
+        assert_eq!(
+            norm(&sanitize_path(Path::new("foo/bar.txt"))),
+            "foo/bar.txt"
+        );
+    }
+
+    #[test]
+    fn sanitize_path_illegal_in_component() {
+        let result = sanitize_path(Path::new("a/b:*?/c.png"));
+        let s = norm(&result);
+        assert!(!s.contains(':'));
+        assert!(!s.contains('*'));
+    }
+
+    #[test]
+    fn sanitize_path_preserves_parent_dir() {
+        let result = sanitize_path(Path::new("a/../b"));
+        let comps: Vec<String> = result
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(comps, vec!["a", "..", "b"]);
+    }
+
+    #[test]
+    fn sanitize_path_long_component_truncated() {
+        let long_stem = "这是一个非常".repeat(50);
+        let name = format!("{long_stem}.mp4");
+        let p = Path::new(&name);
+        let result = sanitize_path(p);
+        assert_length(&norm(&result), 255);
+        assert!(result
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("mp4")));
+    }
+
+    #[test]
+    fn sanitize_path_empty() {
+        assert_eq!(norm(&sanitize_path(Path::new(""))), "");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn sanitize_path_windows_prefix() {
+        let result = sanitize_path(Path::new("C:\\foo\\bar.txt"));
+        let s = norm(&result);
+        assert!(s.starts_with("C:"));
+        assert!(s.ends_with("bar.txt"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn sanitize_path_unix_absolute() {
+        let result = sanitize_path(Path::new("/foo/bar.txt"));
+        let s = norm(&result);
+        assert!(s.starts_with('/'));
+        assert!(s.ends_with("bar.txt"));
     }
 }

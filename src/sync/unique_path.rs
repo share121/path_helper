@@ -43,3 +43,72 @@ pub fn gen_unique_path(path: impl AsRef<Path>) -> std::io::Result<PathBuf> {
     }
     unreachable!("loop should always find a free filename or return an error")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[must_use]
+    fn tmp_root() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("path_helper_ut_{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn creates_new_file() {
+        let dir = tmp_root();
+        let target = dir.join("new.txt");
+        let got = gen_unique_path(&target).unwrap();
+        assert_eq!(got, target);
+        assert!(got.exists());
+        assert_eq!(fs::metadata(&got).unwrap().len(), 0);
+        fs::remove_file(&got).unwrap();
+    }
+
+    #[test]
+    fn existing_gets_numbered() {
+        let dir = tmp_root();
+        let target = dir.join("a.zip");
+        fs::write(&target, b"orig").unwrap();
+        let got = gen_unique_path(&target).unwrap();
+        assert_eq!(got, dir.join("a (1).zip"));
+        assert!(got.exists());
+        assert_eq!(fs::read(&target).unwrap(), b"orig");
+        fs::remove_file(&target).unwrap();
+        fs::remove_file(&got).unwrap();
+    }
+
+    #[test]
+    fn sequence_increments() {
+        let dir = tmp_root();
+        let target = dir.join("b.txt");
+        fs::write(&target, b"0").unwrap();
+        fs::write(dir.join("b (1).txt"), b"1").unwrap();
+        let got = gen_unique_path(&target).unwrap();
+        assert_eq!(got, dir.join("b (2).txt"));
+        fs::remove_file(&target).unwrap();
+        fs::remove_file(dir.join("b (1).txt")).unwrap();
+        fs::remove_file(&got).unwrap();
+    }
+
+    #[test]
+    fn no_extension_numbered() {
+        let dir = tmp_root();
+        let target = dir.join("Makefile");
+        fs::write(&target, b"x").unwrap();
+        let got = gen_unique_path(&target).unwrap();
+        assert_eq!(got, dir.join("Makefile (1)"));
+        fs::remove_file(&target).unwrap();
+        fs::remove_file(&got).unwrap();
+    }
+
+    #[test]
+    fn parent_missing_errors() {
+        let dir = tmp_root().join("nope/sub");
+        let target = dir.join("x.txt");
+        let err = gen_unique_path(&target).unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+    }
+}

@@ -20,3 +20,45 @@ pub async fn safe_replace(path: &Path, content: &[u8]) -> std::io::Result<()> {
     tokio::fs::rename(tmp_path, path).await?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+
+    #[must_use]
+    fn tmp_root() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("path_helper_ts_{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[tokio::test]
+    async fn creates_new_file() {
+        let dir = tmp_root();
+        let p = dir.join("new.txt");
+        safe_replace(&p, b"hello").await.unwrap();
+        assert_eq!(fs::read(&p).unwrap(), b"hello");
+        assert!(!dir.join("new.tmp").exists());
+        fs::remove_file(&p).unwrap();
+    }
+
+    #[tokio::test]
+    async fn overwrites_existing() {
+        let dir = tmp_root();
+        let p = dir.join("existing.txt");
+        fs::write(&p, b"old").unwrap();
+        safe_replace(&p, b"new").await.unwrap();
+        assert_eq!(fs::read(&p).unwrap(), b"new");
+        fs::remove_file(&p).unwrap();
+    }
+
+    #[tokio::test]
+    async fn parent_missing_errors() {
+        let dir = tmp_root().join("nope");
+        let p = dir.join("x.txt");
+        let err = safe_replace(&p, b"x").await.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+    }
+}

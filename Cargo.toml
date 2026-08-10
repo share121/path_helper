@@ -1,6 +1,6 @@
 [package]
 name = "path_helper"
-version = "0.1.9"
+version = "0.1.10"
 description = "简单易用的路径处理库"
 edition = "2021"
 authors = ["share121 <me@s121.top>"]
@@ -27,3 +27,11 @@ cargo = { level = "deny", priority = -1 }
 multiple_crate_versions = "allow"
 nursery = { level = "deny", priority = -1 }
 pedantic = { level = "deny", priority = -1 }
+
+[dev-dependencies]
+tokio = { version = "1.51.0", features = [
+    "fs",
+    "io-util",
+    "macros",
+    "rt-multi-thread",
+] }
