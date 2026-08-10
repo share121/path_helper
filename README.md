@@ -2,6 +2,7 @@
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/share121/path_helper/main)](https://github.com/share121/path_helper/commits/main)
 [![Test](https://github.com/share121/path_helper/workflows/Test/badge.svg)](https://github.com/share121/path_helper/actions)
+[![codecov](https://codecov.io/gh/share121/path_helper/branch/main/graph/badge.svg)](https://codecov.io/gh/share121/path_helper)
 [![Latest version](https://img.shields.io/crates/v/path_helper.svg)](https://crates.io/crates/path_helper)
 [![Documentation](https://docs.rs/path_helper/badge.svg)](https://docs.rs/path_helper)
 [![License](https://img.shields.io/crates/l/path_helper.svg)](https://github.com/share121/path_helper/blob/main/LICENSE)
