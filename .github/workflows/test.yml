@@ -167,7 +167,7 @@ jobs:
         with:
           tool: cargo-minimal-versions
       - name: Check with minimal versions
-        run: cargo hack minimal-versions check --feature-powerset
+        run: cargo hack minimal-versions check --feature-powerset --direct
 
   semver-checks:
     name: Semver Checks
