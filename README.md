@@ -21,3 +21,4 @@
 8. `add_file_stem_suffix`: 给文件名的 stem 部分添加后缀
 9. `add_file_stem_prefix`: 给文件名的 stem 部分添加前缀
 10. `iter_stem`: 一个迭代器，自动生成 `xxx.mp4`、`xxx (1).mp4`、`xxx (2).mp4`……的文件名
+11. `comparable`: 把路径归一成可比较的形式，消除 Windows 上 `\\?\C:\…` 与 `C:\…` 的表示差异，便于 `starts_with` / `==` 判断（仅用于比较，不做 I/O）

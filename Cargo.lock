@@ -41,7 +41,7 @@ dependencies = [
 
 [[package]]
 name = "path_helper"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "mime_guess",
  "sanitize-filename",

@@ -23,6 +23,9 @@ pub use iter_stem::*;
 mod truncate;
 pub use truncate::*;
 
+mod comparable;
+pub use comparable::*;
+
 /// 检查扩展名是否合法
 #[must_use]
 pub fn is_extension(mut ext: &str) -> bool {
